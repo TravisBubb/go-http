@@ -15,13 +15,15 @@ type server struct {
 	host     string
 	port     uint16
 	listener net.Listener
+    handleConnection func(context.Context, net.Conn)
 }
 
 // Creates a new TCP server that listens on the provided host and port number
-func CreateServer(host string, port uint16) *server {
+func CreateServer(host string, port uint16, handleConnection func(context.Context, net.Conn)) *server {
 	return &server{
 		host: host,
 		port: port,
+        handleConnection: handleConnection,
 	}
 }
 
@@ -58,7 +60,6 @@ func (s *server) Start() error {
 // Stops the server
 func (s *server) stop() {
 	s.listener.Close()
-	fmt.Println("tcp listener closed.")
 }
 
 // Executes the main server loop that accepts new incoming connections
@@ -72,22 +73,10 @@ func (s *server) serve(ctx context.Context) {
 
 			log.Println("Error accepting connection:", err)
 		} else {
-			go func() {
-				s.handleConnection(ctx, connection)
-			}()
+            go func(){
+                defer connection.Close()
+                s.handleConnection(ctx, connection)
+            }()
 		}
 	}
-}
-
-// Handles any connections made with the server
-func (s *server) handleConnection(ctx context.Context, connection net.Conn) {
-	defer connection.Close()
-
-	request, err := GetRequestFromConnection(ctx, connection)
-	if err != nil {
-		log.Println("Error occurred attempting to parse request:", err)
-		return
-	}
-
-	log.Println("Request:", request)
 }

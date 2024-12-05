@@ -2,14 +2,27 @@ package main
 
 import (
     "log"
-
     "github.com/TravisBubb/go-http/http"
 )
 
 func main() {
-    server := http.CreateServer("localhost", 8080)
-    err := server.Start()
+    log.Println("Creating api...")
+    api := http.CreateApi()
+
+    log.Println("Registering endpoints...")
+    _ = api.Map(http.GET, "/v1/products", getProducts)
+
+    log.Println("Starting api...")
+    err := api.Run(8080)
     if err != nil {
-        log.Fatal("An unexpected error occurred attempting to start server:", err)
+        log.Fatal("An error occurred attempting to run api server", err)
+    }
+}
+
+func getProducts(request http.HttpRequest) http.HttpResponse {
+    return http.HttpResponse{
+       StatusCode: http.OK, 
+       Protocol: request.Protocol,
+       Content: "{\"Products\": []}",
     }
 }
