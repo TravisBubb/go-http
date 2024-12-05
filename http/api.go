@@ -1,10 +1,12 @@
 package http
 
 import (
-    "context"
+	"context"
 	"fmt"
-    "log"
-    "net"
+	"log"
+	"net"
+
+	"github.com/TravisBubb/go-http/internal/tcp"
 )
 
 type endpoint struct {
@@ -38,7 +40,7 @@ func (api *Api) Map(method HttpMethod, pathTemplate string, handler func(HttpReq
 
 // Executes the API as a blocking call
 func (api *Api) Run(port uint16) error {
-    server := CreateServer("localhost", port, api.handleConnection)
+    server := tcp.CreateServer("localhost", port, api.handleConnection)
     err := server.Start()
     if err != nil {
         log.Fatal("An unexpected error occurred attempting to start the API server:", err)
