@@ -40,3 +40,22 @@ const (
 	NotFound            HttpStatusCode = 404
 	InternalServerError HttpStatusCode = 500
 )
+
+func (statusCode HttpStatusCode) ToString() string {
+    switch statusCode {
+        case OK:
+            return "OK"
+        case Created:
+            return "Created"
+        case BadRequest:
+            return "Bad Request"
+        case Unauthorized:
+            return "Unauthorized"
+        case NotFound:
+            return "Not Found"
+        case InternalServerError:
+            return "Internal Server Error"
+        default:
+            panic(fmt.Sprintf("HTTP Status Code %d not supported", statusCode))
+    }
+}

@@ -7,3 +7,15 @@ type HttpResponse struct {
 	Headers  map[string]string
 	Content  string
 }
+
+// Creates a new HttpResponse
+func CreateResponse(statusCode HttpStatusCode, content string, headers map[string]string, protocol string) HttpResponse {
+    response := HttpResponse {
+        StatusCode: statusCode,
+        Content: content,
+        Headers: headers,
+        Protocol: protocol,
+    }
+
+    return response
+}

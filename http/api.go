@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/TravisBubb/go-http/internal/tcp"
 )
@@ -57,19 +58,41 @@ func (api *Api) handleConnection(ctx context.Context, connection net.Conn) {
 		return
 	}
 
-	log.Println("Request:", request)
-
     endpointKey := endpoint{request.Method, request.Path}
+
+    responseHeaders := make(map[string]string)
+    responseHeaders["Content-Type"] = "application/json"
 
     // TODO: Handle path templates where route parameters are provided
     handleRequest, ok := api.endpoints[endpointKey]
     if !ok || handleRequest == nil {
-        // TODO: Send back a properly formed HTTP response
-        log.Printf("HTTP 404 Not Found - %s %s", request.Method.ToString(), request.Path)
+        response := CreateResponse(NotFound, "", responseHeaders, request.Protocol)
+        responseString := formatHttpResponse(response)
+        _, err = connection.Write([]byte(responseString))
+        if err != nil {
+            log.Println("Error occurred attempting to send response:", err)
+        }
         return
     }
 
     response := handleRequest(request)
+    response.Headers = responseHeaders
+    responseString := formatHttpResponse(response)
+    _, err = connection.Write([]byte(responseString))
+    if err != nil {
+        log.Println("Error occurred attempting to send response:", err)
+    }
+}
 
-    log.Println("Response:", response)
+func formatHttpResponse(response HttpResponse) string {
+    var s strings.Builder
+    s.WriteString(fmt.Sprintf("%s %d %s\n", response.Protocol, response.StatusCode, response.StatusCode.ToString()))
+
+    for k, v := range response.Headers {
+        s.WriteString(fmt.Sprintf("%s: %s\n", k, v))
+    }
+
+    s.WriteString(fmt.Sprintf("\n%s", response.Content))
+
+    return s.String() 
 }
