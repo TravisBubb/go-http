@@ -1,28 +1,37 @@
 package main
 
 import (
-    "log"
-    "github.com/TravisBubb/go-http/http"
+	"github.com/TravisBubb/go-http/http"
+	"log"
 )
 
 func main() {
-    log.Println("Creating api...")
-    api := http.CreateApi()
+	log.Println("Creating api...")
+	api := http.CreateApi()
 
-    log.Println("Registering endpoints...")
-    _ = api.Map(http.GET, "/v1/products", getProducts)
+	log.Println("Registering endpoints...")
+	_ = api.Map(http.GET, "/v1/products", func(c *http.Context) {
+		c.Ok("this was successful...")
+	})
 
-    log.Println("Starting api...")
-    err := api.Run(8080)
-    if err != nil {
-        log.Fatal("An error occurred attempting to run api server", err)
-    }
+	_ = api.Map(http.POST, "/v1/products", func(c *http.Context) {
+		var request postProductRequest
+		err := c.BindRequest(&request)
+		if err != nil {
+			log.Println("Error binding request:", err)
+			return
+		}
+
+		c.Ok("ID " + request.Id)
+	})
+
+	log.Println("Starting api...")
+	err := api.Run(8080)
+	if err != nil {
+		log.Fatal("An error occurred attempting to run api server", err)
+	}
 }
 
-func getProducts(request http.HttpRequest) http.HttpResponse {
-    return http.HttpResponse{
-       StatusCode: http.OK, 
-       Protocol: request.Protocol,
-       Content: "{\"Products\": []}",
-    }
+type postProductRequest struct {
+	Id string `json:"id"`
 }
